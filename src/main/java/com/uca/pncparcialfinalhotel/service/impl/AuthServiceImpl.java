@@ -6,8 +6,10 @@ import com.uca.pncparcialfinalhotel.dto.request.RegisterRequest;
 import com.uca.pncparcialfinalhotel.dto.response.AuthResponse;
 import com.uca.pncparcialfinalhotel.exception.InvalidTokenException;
 import com.uca.pncparcialfinalhotel.exception.ResourceNotFoundException;
+import com.uca.pncparcialfinalhotel.model.Hotel;
 import com.uca.pncparcialfinalhotel.model.User;
 import com.uca.pncparcialfinalhotel.model.enums.Role;
+import com.uca.pncparcialfinalhotel.repository.HotelRepository;
 import com.uca.pncparcialfinalhotel.repository.UserRepository;
 import com.uca.pncparcialfinalhotel.security.JwtService;
 import com.uca.pncparcialfinalhotel.service.AuthService;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final HotelRepository hotelRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -33,11 +36,14 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already in use: " + request.getEmail());
         }
+        Role role = request.getRole() != null ? request.getRole() : Role.CLIENT;
+        Hotel hotel = resolveHotel(role, request.getHotelId());
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : Role.CLIENT)
+                .role(role)
+                .hotel(hotel)
                 .build();
         userRepository.save(user);
         return buildAuthResponse(user);
@@ -88,5 +94,16 @@ public class AuthServiceImpl implements AuthService {
                 .tokenType("Bearer")
                 .expiresIn(jwtService.getAccessExpirationMs() / 1000)
                 .build();
+    }
+
+    private Hotel resolveHotel(Role role, Long hotelId) {
+        if (role != Role.RECEPTIONIST) {
+            return null;
+        }
+        if (hotelId == null) {
+            throw new IllegalArgumentException("hotelId is required for RECEPTIONIST role");
+        }
+        return hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id: " + hotelId));
     }
 }

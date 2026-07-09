@@ -37,6 +37,10 @@ public class User implements UserDetails {
     @Builder.Default
     private Role role = Role.CLIENT;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "hotel_id")
+    private Hotel hotel;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Reservation> reservations = new ArrayList<>();

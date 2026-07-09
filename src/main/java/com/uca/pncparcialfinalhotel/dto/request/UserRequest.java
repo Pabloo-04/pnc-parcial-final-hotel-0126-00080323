@@ -23,4 +23,6 @@ public class UserRequest {
     private String password;
 
     private Role role = Role.CLIENT;
+
+    private Long hotelId;
 }

@@ -51,4 +51,8 @@ Read 3 files
          
 
 
-3.                     
+3. 
+❯ add the security layer using Sping Security, use a signed JWT, using an authentification and authorization filter, create the necessary exeptions, create an /api/auth/login and /api/auth/register    
+and /api/auth/refresh endpoints,return the AccesToken and Refresh Token in the login,l the  access Token has to expire in a short time, say 15 min, and the Refresh Token in a longer time.
+(por ejemplo, 7 días).                                                                                                                                                                                 
+y el /refresh endpoint es  para renovar el Access Token usando el Refresh Token              

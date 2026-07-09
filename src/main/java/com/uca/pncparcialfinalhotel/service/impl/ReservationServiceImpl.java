@@ -2,6 +2,7 @@ package com.uca.pncparcialfinalhotel.service.impl;
 
 import com.uca.pncparcialfinalhotel.dto.request.ReservationRequest;
 import com.uca.pncparcialfinalhotel.dto.response.ReservationResponse;
+import com.uca.pncparcialfinalhotel.exception.ForbiddenException;
 import com.uca.pncparcialfinalhotel.exception.ResourceNotFoundException;
 import com.uca.pncparcialfinalhotel.mapper.ReservationMapper;
 import com.uca.pncparcialfinalhotel.model.Reservation;
@@ -11,6 +12,7 @@ import com.uca.pncparcialfinalhotel.model.enums.ReservationStatus;
 import com.uca.pncparcialfinalhotel.repository.ReservationRepository;
 import com.uca.pncparcialfinalhotel.repository.RoomRepository;
 import com.uca.pncparcialfinalhotel.repository.UserRepository;
+import com.uca.pncparcialfinalhotel.security.SecurityUtils;
 import com.uca.pncparcialfinalhotel.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,10 +30,17 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
     private final ReservationMapper reservationMapper;
+    private final SecurityUtils securityUtils;
 
     @Override
     public ReservationResponse create(ReservationRequest request) {
         validateDates(request);
+        User currentUser = securityUtils.getCurrentUser();
+
+        if (securityUtils.isClient() && !request.getUserId().equals(currentUser.getId())) {
+            throw new ForbiddenException("Clients can only create reservations for themselves");
+        }
+
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
         Room room = roomRepository.findById(request.getRoomId())
@@ -47,14 +56,20 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationResponse getById(Long id) {
-        return reservationMapper.toResponse(
-                reservationRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("Reservation not found with id: " + id))
-        );
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found with id: " + id));
+        checkReadAccess(reservation);
+        return reservationMapper.toResponse(reservation);
     }
 
     @Override
     public List<ReservationResponse> getAll() {
+        if (securityUtils.isReceptionist()) {
+            Long assignedHotelId = securityUtils.requireReceptionistHotelId();
+            return reservationRepository.findByRoomHotelId(assignedHotelId).stream()
+                    .map(reservationMapper::toResponse)
+                    .collect(Collectors.toList());
+        }
         return reservationRepository.findAll().stream()
                 .map(reservationMapper::toResponse)
                 .collect(Collectors.toList());
@@ -62,6 +77,9 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public List<ReservationResponse> getByUserId(Long userId) {
+        if (securityUtils.isClient() && !userId.equals(securityUtils.getCurrentUser().getId())) {
+            throw new ForbiddenException("Clients can only view their own reservations");
+        }
         return reservationRepository.findByUserId(userId).stream()
                 .map(reservationMapper::toResponse)
                 .collect(Collectors.toList());
@@ -100,6 +118,23 @@ public class ReservationServiceImpl implements ReservationService {
     public ReservationResponse updateStatus(Long id, ReservationStatus status) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found with id: " + id));
+
+        if (securityUtils.isClient()) {
+            if (!reservation.getUser().getId().equals(securityUtils.getCurrentUser().getId())) {
+                throw new ForbiddenException("Clients can only update their own reservations");
+            }
+            if (status != ReservationStatus.CANCELLED) {
+                throw new ForbiddenException("Clients can only cancel their reservations");
+            }
+        }
+
+        if (securityUtils.isReceptionist()) {
+            Long assignedHotelId = securityUtils.requireReceptionistHotelId();
+            if (!reservation.getRoom().getHotel().getId().equals(assignedHotelId)) {
+                throw new ForbiddenException("Receptionists can only update reservations for their hotel");
+            }
+        }
+
         if (status == ReservationStatus.CANCELLED && reservation.getStatus() != ReservationStatus.CANCELLED) {
             reservation.getRoom().setAvailable(true);
             roomRepository.save(reservation.getRoom());
@@ -117,6 +152,19 @@ public class ReservationServiceImpl implements ReservationService {
             roomRepository.save(reservation.getRoom());
         }
         reservationRepository.deleteById(id);
+    }
+
+    private void checkReadAccess(Reservation reservation) {
+        if (securityUtils.isClient()) {
+            if (!reservation.getUser().getId().equals(securityUtils.getCurrentUser().getId())) {
+                throw new ForbiddenException("Clients can only view their own reservations");
+            }
+        } else if (securityUtils.isReceptionist()) {
+            Long assignedHotelId = securityUtils.requireReceptionistHotelId();
+            if (!reservation.getRoom().getHotel().getId().equals(assignedHotelId)) {
+                throw new ForbiddenException("Receptionists can only view reservations for their hotel");
+            }
+        }
     }
 
     private void validateDates(ReservationRequest request) {

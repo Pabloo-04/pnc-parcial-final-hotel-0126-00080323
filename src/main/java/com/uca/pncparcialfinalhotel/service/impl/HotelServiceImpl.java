@@ -2,10 +2,12 @@ package com.uca.pncparcialfinalhotel.service.impl;
 
 import com.uca.pncparcialfinalhotel.dto.request.HotelRequest;
 import com.uca.pncparcialfinalhotel.dto.response.HotelResponse;
+import com.uca.pncparcialfinalhotel.exception.ForbiddenException;
 import com.uca.pncparcialfinalhotel.exception.ResourceNotFoundException;
 import com.uca.pncparcialfinalhotel.mapper.HotelMapper;
 import com.uca.pncparcialfinalhotel.model.Hotel;
 import com.uca.pncparcialfinalhotel.repository.HotelRepository;
+import com.uca.pncparcialfinalhotel.security.SecurityUtils;
 import com.uca.pncparcialfinalhotel.service.HotelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
     private final HotelMapper hotelMapper;
+    private final SecurityUtils securityUtils;
 
     @Override
     public HotelResponse create(HotelRequest request) {
@@ -28,6 +31,12 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public HotelResponse getById(Long id) {
+        if (securityUtils.isReceptionist()) {
+            Long assignedHotelId = securityUtils.requireReceptionistHotelId();
+            if (!id.equals(assignedHotelId)) {
+                throw new ForbiddenException("Receptionists can only access their assigned hotel");
+            }
+        }
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id: " + id));
         return hotelMapper.toResponse(hotel);
