@@ -1,5 +1,5 @@
 package com.uca.pncparcialfinalhotel.model.enums;
 
 public enum Role {
-    ADMIN, CLIENT
+    ADMIN, CLIENT, RECEPTIONIST
 }

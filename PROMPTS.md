@@ -5,6 +5,7 @@
 repositories, and exeptions, and also a config directory, handle bussines logic in the service, data access in repository, and the http layer handle in the controller, first implement th whole CRUD  
 for this entities,Hotel, Room,Reservation,and User
 
+### Respuesta
 ⏺ Let me first explore the existing project structure.
 
 Read 3 files, listed 1 directory
@@ -34,10 +35,20 @@ Entity Relationships
 
 - Hotel → Room (OneToMany), Room → Reservation (OneToMany), User → Reservation (OneToMany)
 
+**
 
 
 
 
 
+2. create a Dockerfile and docker-compose yml, to set up the api and db service , use .env
 
-2.
+⏺ Let me check the current config files before writing:
+
+Read 3 files
+
+⏺ Now I have everything I need. I'll update application.yaml for env var support, add .env to .gitignore, and create all three files in parallel:                                                        
+         
+
+
+3.                     

@@ -8,6 +8,7 @@ import com.uca.pncparcialfinalhotel.model.User;
 import com.uca.pncparcialfinalhotel.repository.UserRepository;
 import com.uca.pncparcialfinalhotel.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse create(UserRequest request) {
@@ -26,6 +28,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already in use: " + request.getEmail());
         }
         User user = userMapper.toEntity(request);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userMapper.toResponse(userRepository.save(user));
     }
 
@@ -51,6 +54,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already in use: " + request.getEmail());
         }
         userMapper.updateEntity(user, request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         return userMapper.toResponse(userRepository.save(user));
     }
 
