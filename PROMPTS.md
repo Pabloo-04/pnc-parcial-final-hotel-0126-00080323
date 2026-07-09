@@ -70,3 +70,14 @@ y el /refresh endpoint es  para renovar el Access Token usando el Refresh Token
 
 ### Que genero
 
+Genero toda el filtro de autentificacion, con toda la logica de firmado jwt, devolviendo el acces token y refresh token para login y register.
+
+4.now add this logic to each ROLE, there are three ADMIN, CLIENT, RECEPTIONIST, ADMIN has access to all endpoints, CLIENT, can create reservations, and see only his reservations when using GET he can  
+also cancel its reservations, the RECEPTIONIST can also see rooms and reservations just for the hotel that he or she belongs, add entity relationsip   
+
+### Que genero
+
+Añadio la logica de validacion para rececinista en el service Reservation, ademas de agregar una response para cuando preauthorize falla (403).
+
+5. create a github/workflow/ci.yml to compile and build the project, execute tests if exists and it should fail if it detects a pushed secret or vulnerability 
+Creo el workflow para el compilado y verificacion de pruebas, ningun error detectado.
