@@ -22,6 +22,7 @@ public class UserRequest {
     @NotBlank(message = "Password is required")
     private String password;
 
+    @Builder.Default
     private Role role = Role.CLIENT;
 
     private Long hotelId;

@@ -29,6 +29,7 @@ public class RoomRequest {
     @Positive(message = "Capacity must be positive")
     private Integer capacity;
 
+    @Builder.Default
     private Boolean available = true;
 
     @NotNull(message = "Hotel ID is required")

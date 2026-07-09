@@ -37,6 +37,12 @@ Entity Relationships
 
 **
 
+### Que genero
+
+Claude creo todos las entidades, solicitadas, con todos sus endpoints POST,DELETE,PATCH,GET.
+Puntos a mejorar por ejemplo, dado al corto tiempo y simplicidad los roles se manejan como ENUM,sin embargo idealmente
+en un entorno critico de produccion se debe crear otra tabla de roles, y una tabla cruzada.
+
 
 
 
@@ -48,11 +54,19 @@ Entity Relationships
 Read 3 files
 
 ⏺ Now I have everything I need. I'll update application.yaml for env var support, add .env to .gitignore, and create all three files in parallel:                                                        
-         
 
+### Que genero
+
+Creo el dockerfile para crear la imagen de la api, ademas del docker-compose.yml para orquestrar los contenedores de la api y de la base de datos.
+No hubo correccion en este paso.
 
 3. 
 ❯ add the security layer using Sping Security, use a signed JWT, using an authentification and authorization filter, create the necessary exeptions, create an /api/auth/login and /api/auth/register    
 and /api/auth/refresh endpoints,return the AccesToken and Refresh Token in the login,l the  access Token has to expire in a short time, say 15 min, and the Refresh Token in a longer time.
 (por ejemplo, 7 días).                                                                                                                                                                                 
-y el /refresh endpoint es  para renovar el Access Token usando el Refresh Token              
+y el /refresh endpoint es  para renovar el Access Token usando el Refresh Token      
+
+
+
+### Que genero
+
